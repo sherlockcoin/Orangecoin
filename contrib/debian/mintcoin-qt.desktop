@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=OrangeCoin
+Comment=OrangeCoin P2P Cryptocurrency
+Comment[fr]=OrangeCoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=OrangeCoin, eşten eşe kriptografik sanal para birimi
+Comment[es]=OrangeCoin, una criptomoneda P2P
+Exec=/usr/bin/orangecoin-qt
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/bitcoin80.xpm
+MimeType=x-scheme-handler/orangecoin;
+Categories=Office;
