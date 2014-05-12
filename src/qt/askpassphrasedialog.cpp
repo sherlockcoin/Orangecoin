@@ -3,7 +3,6 @@
 
 #include "guiconstants.h"
 #include "walletmodel.h"
-#include "overviewpage.h"
 
 #include <QMessageBox>
 #include <QPushButton>
