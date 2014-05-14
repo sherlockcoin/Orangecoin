@@ -102,8 +102,6 @@ private:
 
     QMovie *syncIconMovie;
 
-    uint64 nMinMax;
-    uint64 nWeight;
     uint64 nNetworkWeight;
 
     /** Create the main UI actions. */
@@ -185,8 +183,6 @@ private slots:
 
     /** Update info about minting */
     void updateMintingIcon();
-    /** Update minting weight info */
-    void updateMintingWeights();
 };
 
 #endif

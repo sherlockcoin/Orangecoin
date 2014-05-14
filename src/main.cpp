@@ -41,12 +41,12 @@ static CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 static CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 20);
 static CBigNum bnProofOfStakeLimitTestNet(~uint256(0) >> 20);
 
-unsigned int nStakeMinAge = 60 * 60 * 24 * 20;	// minimum age for coin age: 20d
-unsigned int nStakeMaxAge = 60 * 60 * 24 * 40;	// stake age of full weight: 40d
-unsigned int nStakeTargetSpacing = 30;			// 30 sec block spacing
+unsigned int nStakeMinAge = 60 * 60 * 24 * 14;	// minimum age for coin age: 20d
+unsigned int nStakeMaxAge = 60 * 60 * 24 * 28;	// stake age of full weight: 40d
+unsigned int nStakeTargetSpacing = 120;			// 30 sec block spacing
 
-int64 nChainStartTime = 1391393673;
-int nCoinbaseMaturity = 30;
+int64 nChainStartTime = 1398442292;
+int nCoinbaseMaturity = 300;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainTrust = 0;
@@ -68,7 +68,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "MintCoin Signed Message:\n";
+const string strMessageMagic = "OrangeCoin Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -935,36 +935,45 @@ int generateMTRandom(unsigned int s, int range)
 
 
 
-static const int64 nMinSubsidy = 1 * COIN;
-static const int CUTOFF_HEIGHT = 100800;	// Height at the end of 5 weeks
+static const int64 nMinSubsidy = 10 * COIN;
+static const int CUTOFF_HEIGHT = 10000;	// Height at the end of 5 weeks
 // miner's coin base reward based on nBits
 int64 GetProofOfWorkReward(int nHeight, int64 nFees, uint256 prevHash)
 {
-	int64 nSubsidy = 100000 * COIN;
+	int64 nSubsidy = 5000 * COIN;
+
+    std::string cseed_str = prevHash.ToString().substr(14,7);
+    const char* cseed = cseed_str.c_str();
+    long seed = hex2long(cseed);
+    int rand = generateMTRandom(seed, 8000);
+
 
 	if(nHeight == 1)
 	{
 		nSubsidy = TAX_PERCENTAGE * CIRCULATION_MONEY;
 		return nSubsidy + nFees;
 	}
+    else if(nHeight == 2)
+    {
+        nSubsidy = rand * COIN;
+        return nSubsidy + nFees;
+    }
+
 	else if(nHeight > CUTOFF_HEIGHT)
 	{
 		return nMinSubsidy + nFees;
 	}
 
-	std::string cseed_str = prevHash.ToString().substr(14,7);
-	const char* cseed = cseed_str.c_str();
-	long seed = hex2long(cseed);
-	nSubsidy += generateMTRandom(seed, 800000) * COIN;
+	
 
 	// Subsidy is cut in half every week or 20160 blocks, which will occur approximately every month
-	nSubsidy >>= (nHeight / 20160); 
+	
     return nSubsidy + nFees;
 }
 
 // miner's coin stake reward based on nBits and coin age spent (coin-days)
 // simple algorithm, not depend on the diff
-const int YEARLY_BLOCKCOUNT = 1051200;	// 365 * 2880
+const int YEARLY_BLOCKCOUNT = 262800;	// 365 * 2880
 int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime, int nHeight)
 {
     int64 nRewardCoinYear;
@@ -972,9 +981,9 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
 	nRewardCoinYear = MAX_MINT_PROOF_OF_STAKE;
 
 	if(nHeight < YEARLY_BLOCKCOUNT)
-		nRewardCoinYear = 4 * MAX_MINT_PROOF_OF_STAKE;
+		nRewardCoinYear = 8 * MAX_MINT_PROOF_OF_STAKE;
 	else if(nHeight < (2 * YEARLY_BLOCKCOUNT))
-		nRewardCoinYear = 3 * MAX_MINT_PROOF_OF_STAKE;
+		nRewardCoinYear = 4 * MAX_MINT_PROOF_OF_STAKE;
 	else if(nHeight < (3 * YEARLY_BLOCKCOUNT))
 		nRewardCoinYear = 2 * MAX_MINT_PROOF_OF_STAKE;
 
@@ -985,7 +994,7 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
     return nSubsidy;
 }
 
-static const int64 nTargetTimespan = 30 * 30;  
+static const int64 nTargetTimespan = 10 * 120;  
 static const int64 nTargetSpacingWorkMax = 3 * nStakeTargetSpacing; 
 
 //
@@ -1511,8 +1520,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes in their
     // initial block download.
-    bool fEnforceBIP30 = true; // Always active in MintCoin
-    bool fStrictPayToScriptHash = true; // Always active in MintCoin
+    bool fEnforceBIP30 = true; // Always active in OrangeCoin
+    bool fStrictPayToScriptHash = true; // Always active in OrangeCoin
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos;
@@ -2458,7 +2467,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "MintCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "OrangeCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
         StartShutdown();
         return false;
     }
@@ -2520,10 +2529,10 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        pchMessageStart[0] = 0xcd;
-        pchMessageStart[1] = 0xf2;
-        pchMessageStart[2] = 0xc0;
-        pchMessageStart[3] = 0xef;
+        pchMessageStart[0] = 0xdd;
+        pchMessageStart[1] = 0xe1;
+        pchMessageStart[2] = 0xb4;
+        pchMessageStart[3] = 0xff;
 
         bnProofOfStakeLimit = bnProofOfStakeLimitTestNet; // 0x00000fff PoS base target is fixed in testnet
         bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 0x0000ffff PoW base target is fixed in testnet
@@ -2551,7 +2560,7 @@ bool LoadBlockIndex(bool fAllowNew)
             return false;
 
         // Genesis block
-        const char* pszTimestamp = "Feb 2, 2014: The Denver Broncos finally got on the board with a touchdown in the final seconds of the third quarter. But the Seattle Seahawks are dominating the Broncos 36-8";
+        const char* pszTimestamp = "Amazon's next smartphone to be flanked by 'Prime Data,' report says";
         CTransaction txNew;
         txNew.nTime = nChainStartTime;
         txNew.vin.resize(1);
@@ -2564,10 +2573,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1391393693;
+        block.nTime    = 1398442292;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 12488421;
-
+        block.nNonce   = 561454;
         //// debug print
         block.print();
         printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
@@ -2575,7 +2583,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nTime = %u \n", block.nTime);
         printf("block.nNonce = %u \n", block.nNonce);
 
-        assert(block.hashMerkleRoot == uint256("cf174ca43b1b30e9a27f7fdc20ff9caf626499d023f1f033198fdbadf73ca747"));
+        assert(block.hashMerkleRoot == uint256("1cda8b07c8212a79fb3bdf99b3e67ddb00dc8ea21737a45d62066da8e2ff0a56"));
 		assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
 
         // Start new block file
@@ -2759,6 +2767,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
 extern map<uint256, CAlert> mapAlerts;
 extern CCriticalSection cs_mapAlerts;
 
+static string strMintWarning;
+
 string GetWarnings(string strFor)
 {
     int nPriority = 0;
@@ -2767,6 +2777,13 @@ string GetWarnings(string strFor)
 
     if (GetBoolArg("-testsafemode"))
         strRPC = "test";
+
+    // ppcoin: wallet lock warning for minting
+    if (strMintWarning != "")
+    {
+        nPriority = 0;
+        strStatusBar = strMintWarning;
+    }
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
@@ -2853,7 +2870,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xce, 0xd5, 0xdb, 0xfa };
+unsigned char pchMessageStart[4] = { 0xd1, 0xd4, 0xb2, 0xf5 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
@@ -4329,8 +4346,6 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             // ppcoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
-                if (!pblock->SignBlock(*pwalletMain))
-                    continue;
                 printf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
                 SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CheckWork(pblock.get(), *pwalletMain, reservekey);
@@ -4389,7 +4404,10 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                     pblock->nNonce = nNonceFound;
                     assert(result == pblock->GetHash());
                     if (!pblock->SignBlock(*pwalletMain))
+                    {
                         break;
+                    }
+                    strMintWarning = "";
 
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
