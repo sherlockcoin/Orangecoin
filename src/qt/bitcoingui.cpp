@@ -989,3 +989,5 @@ void BitcoinGUI::updateMintingWeights()
          nNetworkWeight = GetPoSKernelPS();
      }
  }
+ 
+ 
