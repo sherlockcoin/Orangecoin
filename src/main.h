@@ -37,7 +37,7 @@ static const int64 CIRCULATION_MONEY = MAX_MONEY;
 static const double TAX_PERCENTAGE = 0.005;
 static const int64 MAX_MINT_PROOF_OF_STAKE = 0.025 * COIN;	// 5% annual interest
 static const int CUTOFF_POW_BLOCK = 10000;
-static const int START_POS_BLOCK = 9000;
+static const int START_POS_BLOCK = 9998;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
