@@ -2122,7 +2122,8 @@ bool CBlock::AcceptBlock()
 
     if (IsProofOfWork() && nHeight > CUTOFF_POW_BLOCK)
         return DoS(100, error("AcceptBlock() : No proof-of-work allowed anymore (height = %d)", nHeight));
-
+	if (IsProofOfStake() && nHeight < START_POS_BLOCK)
+    return DoS(100, error("AcceptBlock() : No proof of stake allowed yet (height = %d)", nHeight));
     // Check proof-of-work or proof-of-stake
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
@@ -2767,7 +2768,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
 extern map<uint256, CAlert> mapAlerts;
 extern CCriticalSection cs_mapAlerts;
 
-static string strMintWarning;
+
 
 string GetWarnings(string strFor)
 {
@@ -2777,13 +2778,6 @@ string GetWarnings(string strFor)
 
     if (GetBoolArg("-testsafemode"))
         strRPC = "test";
-
-    // ppcoin: wallet lock warning for minting
-    if (strMintWarning != "")
-    {
-        nPriority = 0;
-        strStatusBar = strMintWarning;
-    }
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
@@ -4346,6 +4340,8 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             // ppcoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
+                if (!pblock->SignBlock(*pwalletMain))
+                     continue;
                 printf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
                 SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CheckWork(pblock.get(), *pwalletMain, reservekey);
@@ -4404,11 +4400,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                     pblock->nNonce = nNonceFound;
                     assert(result == pblock->GetHash());
                     if (!pblock->SignBlock(*pwalletMain))
-                    {
-                        break;
-                    }
-                    strMintWarning = "";
-
+                    
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
                     SetThreadPriority(THREAD_PRIORITY_LOWEST);
