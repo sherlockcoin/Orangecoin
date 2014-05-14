@@ -4400,7 +4400,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                     pblock->nNonce = nNonceFound;
                     assert(result == pblock->GetHash());
                     if (!pblock->SignBlock(*pwalletMain))
-                    
+                    break;
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
                     SetThreadPriority(THREAD_PRIORITY_LOWEST);
