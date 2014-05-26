@@ -766,13 +766,22 @@ Value sendmany(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-//
-// Used by addmultisigaddress / createmultisig:
-//
-CScript _createmultisig_redeemScript(const Array& params)
+Value addmultisigaddress(const Array& params, bool fHelp)
 {
+    if (fHelp || params.size() < 2 || params.size() > 3)
+    {
+        string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
+            "Add a nrequired-to-sign multisignature address to the wallet\"\n"
+            "each key is a OrangeCoin address or hex-encoded public key\n"
+            "If [account] is specified, assign address to [account].";
+        throw runtime_error(msg);
+    }
+
     int nRequired = params[0].get_int();
     const Array& keys = params[1].get_array();
+    string strAccount;
+    if (params.size() > 2)
+        strAccount = AccountFromValue(params[2]);
 
     // Gather public keys
     if (nRequired < 1)
@@ -780,140 +789,52 @@ CScript _createmultisig_redeemScript(const Array& params)
     if ((int)keys.size() < nRequired)
         throw runtime_error(
             strprintf("not enough keys supplied "
-                      "(got %u keys, but need at least %d to redeem)", keys.size(), nRequired));
-    std::vector<CPubKey> pubkeys;
+                      "(got %"PRIszu" keys, but need at least %d to redeem)", keys.size(), nRequired));
+    std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
     for (unsigned int i = 0; i < keys.size(); i++)
     {
         const std::string& ks = keys[i].get_str();
-#ifdef ENABLE_WALLET
-        // Case 1: OrangeCoin address and we have full public key:
+
+        // Case 1: Bitcoin address and we have full public key:
         CBitcoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
+        if (address.IsValid())
         {
             CKeyID keyID;
             if (!address.GetKeyID(keyID))
                 throw runtime_error(
-                    strprintf("%s does not refer to a key",ks));
+                    strprintf("%s does not refer to a key",ks.c_str()));
             CPubKey vchPubKey;
             if (!pwalletMain->GetPubKey(keyID, vchPubKey))
                 throw runtime_error(
-                    strprintf("no full public key for address %s",ks));
-            if (!vchPubKey.IsFullyValid())
+                    strprintf("no full public key for address %s",ks.c_str()));
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
         }
 
         // Case 2: hex public key
-        else
-#endif
-        if (IsHex(ks))
+        else if (IsHex(ks))
         {
             CPubKey vchPubKey(ParseHex(ks));
-            if (!vchPubKey.IsFullyValid())
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
         }
         else
         {
             throw runtime_error(" Invalid public key: "+ks);
         }
     }
-    CScript result;
-    result.SetMultisig(nRequired, pubkeys);
-
-    if (result.size() > MAX_SCRIPT_ELEMENT_SIZE)
-        throw runtime_error(
-                strprintf("redeemScript exceeds size limit: %d > %d", result.size(), MAX_SCRIPT_ELEMENT_SIZE));
-
-    return result;
-}
-
-Value addmultisigaddress(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 3)
-    {
-        string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
-            "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-            "Each key is a OrangeCoin address or hex-encoded public key.\n"
-            "If 'account' is specified, assign address to that account.\n"
-
-            "\nArguments:\n"
-            "1. nrequired (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keysobject\" (string, required) A json array of OrangeCoin addresses or hex-encoded public keys\n"
-            " [\n"
-            " \"address\" (string) OrangeCoin address or hex-encoded public key\n"
-            " ...,\n"
-            " ]\n"
-            "3. \"account\" (string, optional) An account to assign the addresses to.\n"
-
-            "\nResult:\n"
-            "\"OrangeCoinaddress\" (string) A OrangeCoin address associated with the keys.\n"
-
-            "\nExamples:\n"
-            "\nAdd a multisig address from 2 addresses\n"
-            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
-            "\nAs json rpc call\n"
-            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
-        ;
-        throw runtime_error(msg);
-    }
-
-    string strAccount;
-    if (params.size() > 2)
-        strAccount = AccountFromValue(params[2]);
 
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(params);
+    CScript inner;
+    inner.SetMultisig(nRequired, pubkeys);
     CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
 
-    pwalletMain->SetAddressBook(innerID, strAccount, "send");
+    pwalletMain->SetAddressBookName(innerID, strAccount);
     return CBitcoinAddress(innerID).ToString();
 }
 
-Value createmultisig(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 2)
-    {
-        string msg = "createmultisig nrequired [\"key\",...]\n"
-            "\nCreates a multi-signature address with n signature of m keys required.\n"
-            "It returns a json object with the address and redeemScript.\n"
-
-            "\nArguments:\n"
-            "1. nrequired (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\" (string, required) A json array of keys which are bitcoin addresses or hex-encoded public keys\n"
-            " [\n"
-            " \"key\" (string) OrangeCoin address or hex-encoded public key\n"
-            " ,...\n"
-            " ]\n"
-
-            "\nResult:\n"
-            "{\n"
-            " \"address\":\"multisigaddress\", (string) The value of the new multisig address.\n"
-            " \"redeemScript\":\"script\" (string) The string value of the hex-encoded redemption script.\n"
-            "}\n"
-
-            "\nExamples:\n"
-            "\nCreate a multisig address from 2 addresses\n"
-            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("createmultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
-        ;
-        throw runtime_error(msg);
-    }
-
-    // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(params);
-    CScriptID innerID = inner.GetID();
-    CBitcoinAddress address(innerID);
-
-    Object result;
-    result.push_back(Pair("address", address.ToString()));
-    result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
-
-    return result;
-}
 
 struct tallyitem
 {
