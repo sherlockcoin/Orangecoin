@@ -9,7 +9,7 @@ PoS will start after at least 14 days of holding of the coins in the wallet. Wit
 
 - 2 minute  block target
 - 5000 coins per block initially
-- ~~After 2 weeks, the PoW payout will be fixed at 10 coin per block~~ PoW completely remvoed from block 220000
+- PoW completely remvoed from block 10000
 - Difficulty retargets every block 
 - PoS variable interests:
 	- 1st year: 20%
