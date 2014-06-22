@@ -7,7 +7,7 @@ SetCompressor /SOLID lzma
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 1.0.4
 !define COMPANY "Orangecoin project"
-!define URL http://
+!define URL https://orangecoins.info
 
 # MUI Symbol Definitions
 !define MUI_ICON "../share/pixmaps/orangecoin.ico"
