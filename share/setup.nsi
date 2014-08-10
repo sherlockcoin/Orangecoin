@@ -1,4 +1,4 @@
-Name Orangecoin
+Name OrangeCoin
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -6,23 +6,23 @@ SetCompressor /SOLID lzma
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 1.0.4
-!define COMPANY "Orangecoin project"
+!define COMPANY "OrangeCoin project"
 !define URL https://orangecoins.info
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/orangecoin.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
+!define MUI_ICON "..\share\pixmaps\orangecoin.ico"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "..\share\pixmaps\nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "../share/pixmaps/nsis-header.bmp"
+!define MUI_HEADERIMAGE_BITMAP "..\share\pixmaps\nsis-header.bmp"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER Orangecoin
-!define MUI_FINISHPAGE_RUN $INSTDIR\orangecoin-qt.exe
-!define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER OrangeCoin
+!define MUI_FINISHPAGE_RUN $INSTDIR\OrangeCoin-Qt.exe
+!define MUI_UNICON "..\share\pixmaps\orangecoin.ico"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "..\share\pixmaps\nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
 # Included files
@@ -45,14 +45,14 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile Orangecoin-1.0.4-win32-setup.exe
-InstallDir $PROGRAMFILES\Orangecoin
+OutFile ..\release\OrangeCoin-1.0.4-win32-setup.exe
+InstallDir $PROGRAMFILES\OrangeCoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.3.0.0
-VIAddVersionKey ProductName Orangecoin
+VIProductVersion 1.0.4.0
+VIAddVersionKey ProductName OrangeCoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
@@ -66,19 +66,8 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File ../release/Orangecoin-qt.exe
-    File /oname=license.txt ../COPYING
-    File /oname=readme.txt ../doc/README_windows.txt
-    SetOutPath $INSTDIR\daemon
-    File ../src/Orangecoind.exe
-    SetOutPath $INSTDIR\src
-    File /r /x *.exe /x *.o ../src\*.*
-    SetOutPath $INSTDIR
+    File ..\release\OrangeCoin-Qt.exe
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
-
-    # Remove old wxwidgets-based-Orangecoin executable and locales:
-    Delete /REBOOTOK $INSTDIR\Orangecoin.exe
-    RMDir /r /REBOOTOK $INSTDIR\locale
 SectionEnd
 
 Section -post SEC0001
@@ -87,8 +76,8 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Orangecoin.lnk" $INSTDIR\Orangecoin-qt.exe
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall Orangecoin.lnk" $INSTDIR\uninstall.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\OrangeCoin.lnk" $INSTDIR\OrangeCoin-Qt.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall OrangeCoin.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
@@ -99,11 +88,11 @@ Section -post SEC0001
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
 
-    # Orangecoin: URI handling disabled for 0.6.0
-        WriteRegStr HKCR "Orangecoin" "URL Protocol" ""
-        WriteRegStr HKCR "Orangecoin" "" "URL:Orangecoin"
-        WriteRegStr HKCR "Orangecoin\DefaultIcon" "" $INSTDIR\Orangecoin-qt.exe
-        WriteRegStr HKCR "Orangecoin\shell\open\command" "" '"$INSTDIR\Orangecoin-qt.exe" "$$1"'
+    # OrangeCoin: URI handling disabled for 0.6.0
+    WriteRegStr HKCR "OrangeCoin" "URL Protocol" ""
+    WriteRegStr HKCR "OrangeCoin" "" "URL:OrangeCoin"
+    WriteRegStr HKCR "OrangeCoin\DefaultIcon" "" $INSTDIR\OrangeCoin-Qt.exe
+    WriteRegStr HKCR "OrangeCoin\shell\open\command" "" '"$INSTDIR\OrangeCoin-Qt.exe" "$$1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -121,27 +110,21 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\Orangecoin-qt.exe
-    Delete /REBOOTOK $INSTDIR\license.txt
-    Delete /REBOOTOK $INSTDIR\readme.txt
-    RMDir /r /REBOOTOK $INSTDIR\daemon
-    RMDir /r /REBOOTOK $INSTDIR\src
+    Delete /REBOOTOK $INSTDIR\OrangeCoin-Qt.exe
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 
 Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall Orangecoin.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Orangecoin.lnk"
-    Delete /REBOOTOK "$SMSTARTUP\Orangecoin.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall OrangeCoin.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\OrangeCoin.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\OrangeCoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
-    Delete /REBOOTOK $INSTDIR\debug.log
-    Delete /REBOOTOK $INSTDIR\db.log
     DeleteRegValue HKCU "${REGKEY}" StartMenuGroup
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "Orangecoin"
+    DeleteRegKey HKCR "OrangeCoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0
