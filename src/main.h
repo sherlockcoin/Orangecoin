@@ -35,10 +35,11 @@ static const int64 MIN_RELAY_TX_FEE = 10 * CENT;
 static const int64 MAX_MONEY = 200000000 * COIN;			// 70 bil
 static const int64 CIRCULATION_MONEY = MAX_MONEY;
 static const double TAX_PERCENTAGE = 0.005;
-static const int64 MAX_MINT_PROOF_OF_STAKE = 0.025 * COIN;	// 5% annual interest
+static const int64 MAX_MINT_PROOF_OF_STAKE = 0.025 * COIN;	// 2.5% annual interest
 static const int CUTOFF_POW_BLOCK = 10000;
 static const int START_POS_BLOCK = 9998;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
+static const int MAX_TIME_SINCE_BEST_BLOCK = 10;
 
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
